@@ -19,8 +19,8 @@ from typing import (
     Union,
 )
 
-from simpy.core import BoundClass, Environment
-from simpy.resources import base
+from simcy.core import BoundClass, Environment
+from simcy.resources import base
 
 
 class StorePut(base.Put):
@@ -68,7 +68,7 @@ class Store(base.BaseResource):
     default, the *capacity* is unlimited and objects are put and retrieved from
     the store in a first-in first-out order.
 
-    The *env* parameter is the :class:`~simpy.core.Environment` instance the
+    The *env* parameter is the :class:`~simcy.core.Environment` instance the
     container is bound to.
 
     """

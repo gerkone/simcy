@@ -1,4 +1,23 @@
-# encoding: utf-8
-from setuptools import setup
+from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
 
-setup(use_scm_version=True)
+extensions = [
+    Extension(
+        "simcy.*",
+        ["simcy/*.pyx"]
+    ),
+    Extension(
+        "simcy.resources.*",
+        ["simcy/resources/*.pyx"],
+    ),
+]
+
+setup(
+    name="simcy",
+    version="0.0.6",
+    author="gerkone",
+    author_email="ggalletti@tutanota.com",
+    url="https://github.com/gerkone/cysimcy",
+    packages=find_packages(exclude=["test*"]),
+    ext_modules=cythonize(extensions)
+)

@@ -7,7 +7,7 @@ Covers:
 
 Scenario:
   This example shows how to interconnect simulation model elements
-  together using :class:`~simpy.resources.store.Store` for one-to-one,
+  together using :class:`~simcy.resources.store.Store` for one-to-one,
   and many-to-one asynchronous processes. For one-to-many a simple
   BroadCastPipe class is constructed from Store.
 
@@ -44,7 +44,7 @@ class BroadcastPipe(object):
     buffering to the consuming processes.
 
     The parameters are used to create a new
-    :class:`~simpy.resources.store.Store` instance each time
+    :class:`~simcy.resources.store.Store` instance each time
     :meth:`get_output_conn()` is called.
 
     """
@@ -63,7 +63,7 @@ class BroadcastPipe(object):
     def get_output_conn(self):
         """Get a new output connection for this broadcast pipe.
 
-        The return value is a :class:`~simpy.resources.store.Store`.
+        The return value is a :class:`~simcy.resources.store.Store`.
 
         """
         pipe = simpy.Store(self.env, capacity=self.capacity)

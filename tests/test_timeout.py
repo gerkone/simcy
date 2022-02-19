@@ -1,5 +1,5 @@
 """
-Tests for ``simpy.events.Timeout``.
+Tests for ``simcy.events.Timeout``.
 
 """
 # Pytest gets the parameters "env" and "log" from the *conftest.py* file

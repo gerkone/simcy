@@ -9,8 +9,8 @@ fuel tanks.
 """
 from typing import TYPE_CHECKING, Optional, Union
 
-from simpy.core import BoundClass, Environment
-from simpy.resources import base
+from simcy.core import BoundClass, Environment
+from simcy.resources import base
 
 
 ContainerAmount = Union[int, float]
@@ -55,7 +55,7 @@ class Container(base.BaseResource):
     continuous (like water) or discrete (like apples). It supports requests to
     put or get matter into/from the container.
 
-    The *env* parameter is the :class:`~simpy.core.Environment` instance the
+    The *env* parameter is the :class:`~simcy.core.Environment` instance the
     container is bound to.
 
     The *capacity* defines the size of the container. By default, a container

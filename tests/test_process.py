@@ -1,5 +1,5 @@
 """
-Tests for the ``simpy.events.Process``.
+Tests for the ``simcy.events.Process``.
 
 """
 # Pytest gets the parameters "env" and "log" from the *conftest.py* file

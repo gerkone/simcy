@@ -1,5 +1,5 @@
 """
-Base classes of for SimPy's shared resource types.
+Base classes of for simcy's shared resource types.
 
 :class:`BaseResource` defines the abstract base resource. It supports *get* and
 *put* requests, which return :class:`Put` and :class:`Get` events respectively.
@@ -19,18 +19,18 @@ from typing import (
     Union,
 )
 
-from simpy.core import BoundClass, Environment
-from simpy.events import Event, Process
+from simcy.core import BoundClass, Environment
+from simcy.events import Event, Process
 
 ResourceType = TypeVar('ResourceType', bound='BaseResource')
 
 
-class Put(Event, ContextManager['Put'], Generic[ResourceType]):
+class Put(Event):
     """Generic event for requesting to put something into the *resource*.
 
     This event (and all of its subclasses) can act as context manager and can
     be used with the :keyword:`with` statement to automatically cancel the
-    request if an exception (like an :class:`simpy.exceptions.Interrupt` for
+    request if an exception (like an :class:`simcy.exceptions.Interrupt` for
     example) occurs:
 
     .. code-block:: python
@@ -39,6 +39,9 @@ class Put(Event, ContextManager['Put'], Generic[ResourceType]):
             yield request
 
     """
+
+    # cdef public object resource
+    # cdef public object proc
 
     def __init__(self, resource: ResourceType):
         super().__init__(resource._env)
@@ -66,7 +69,7 @@ class Put(Event, ContextManager['Put'], Generic[ResourceType]):
 
         This method has to be called if the put request must be aborted, for
         example if a process needs to handle an exception like an
-        :class:`~simpy.exceptions.Interrupt`.
+        :class:`~simcy.exceptions.Interrupt`.
 
         If the put request was created in a :keyword:`with` statement, this
         method is called automatically.
@@ -76,12 +79,12 @@ class Put(Event, ContextManager['Put'], Generic[ResourceType]):
             self.resource.put_queue.remove(self)
 
 
-class Get(Event, ContextManager['Get'], Generic[ResourceType]):
+class Get(Event):
     """Generic event for requesting to get something from the *resource*.
 
     This event (and all of its subclasses) can act as context manager and can
     be used with the :keyword:`with` statement to automatically cancel the
-    request if an exception (like an :class:`simpy.exceptions.Interrupt` for
+    request if an exception (like an :class:`simcy.exceptions.Interrupt` for
     example) occurs:
 
     .. code-block:: python
@@ -90,6 +93,9 @@ class Get(Event, ContextManager['Get'], Generic[ResourceType]):
             item = yield request
 
     """
+
+    # cdef public object resource
+    # cdef public object proc
 
     def __init__(self, resource: ResourceType):
         super().__init__(resource._env)
@@ -117,7 +123,7 @@ class Get(Event, ContextManager['Get'], Generic[ResourceType]):
 
         This method has to be called if the get request must be aborted, for
         example if a process needs to handle an exception like an
-        :class:`~simpy.exceptions.Interrupt`.
+        :class:`~simcy.exceptions.Interrupt`.
 
         If the get request was created in a :keyword:`with` statement, this
         method is called automatically.
@@ -131,7 +137,7 @@ PutType = TypeVar('PutType', bound=Put)
 GetType = TypeVar('GetType', bound=Get)
 
 
-class BaseResource(Generic[PutType, GetType]):
+cdef class BaseResource:
     """Abstract base class for a shared resource.
 
     You can :meth:`put()` something into the resources or :meth:`get()`
@@ -162,6 +168,18 @@ class BaseResource(Generic[PutType, GetType]):
     ``__getitem__()`` and ``__len__()``) as well as provide ``append()`` and
     ``pop()`` operations."""
 
+    cdef public object _env
+    cdef public object _capacity
+    cdef public object put_queue
+    cdef public object get_queue
+
+    cdef public object put
+    cdef public object get
+
+    def __cinit__(self):
+        self.put = self._put
+        self.get = self._get
+
     def __init__(self, env: Environment, capacity: Union[float, int]):
         self._env = env
         self._capacity = capacity
@@ -178,23 +196,17 @@ class BaseResource(Generic[PutType, GetType]):
         """Maximum capacity of the resource."""
         return self._capacity
 
-    if TYPE_CHECKING:
+    def _put(self) -> Put:
+        """Request to put something into the resource and return a
+        :class:`Put` event, which gets triggered once the request
+        succeeds."""
+        return Put(self)
 
-        def put(self) -> Put:
-            """Request to put something into the resource and return a
-            :class:`Put` event, which gets triggered once the request
-            succeeds."""
-            return Put(self)
-
-        def get(self) -> Get:
-            """Request to get something from the resource and return a
-            :class:`Get` event, which gets triggered once the request
-            succeeds."""
-            return Get(self)
-
-    else:
-        put = BoundClass(Put)
-        get = BoundClass(Get)
+    def _get(self) -> Get:
+        """Request to get something from the resource and return a
+        :class:`Get` event, which gets triggered once the request
+        succeeds."""
+        return Get(self)
 
     def _do_put(self, event: PutType) -> Optional[bool]:
         """Perform the *put* operation.
@@ -219,17 +231,12 @@ class BaseResource(Generic[PutType, GetType]):
         """
 
         # Maintain queue invariant: All put requests must be untriggered.
-        # This code is not very pythonic because the queue interface should be
-        # simple (only append(), pop(), __getitem__() and __len__() are
-        # required).
-        idx = 0
-        while idx < len(self.put_queue):
-            put_event = self.put_queue[idx]
+
+        for i, put_event in enumerate(self.put_queue):
             proceed = self._do_put(put_event)
-            if not put_event.triggered:
-                idx += 1
-            elif self.put_queue.pop(idx) != put_event:
-                raise RuntimeError('Put queue invariant violated')
+
+            if put_event.triggered and self.put_queue.pop(i) != put_event:
+                raise RuntimeError('Get queue invariant violated')
 
             if not proceed:
                 break
@@ -259,16 +266,11 @@ class BaseResource(Generic[PutType, GetType]):
         """
 
         # Maintain queue invariant: All get requests must be untriggered.
-        # This code is not very pythonic because the queue interface should be
-        # simple (only append(), pop(), __getitem__() and __len__() are
-        # required).
-        idx = 0
-        while idx < len(self.get_queue):
-            get_event = self.get_queue[idx]
+
+        for i, get_event in enumerate(self.get_queue):
             proceed = self._do_get(get_event)
-            if not get_event.triggered:
-                idx += 1
-            elif self.get_queue.pop(idx) != get_event:
+
+            if get_event.triggered and self.get_queue.pop(i) != get_event:
                 raise RuntimeError('Get queue invariant violated')
 
             if not proceed:

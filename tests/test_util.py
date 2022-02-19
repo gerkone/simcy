@@ -1,5 +1,5 @@
 """
-Tests for the utility functions from :mod:`simpy.util`.
+Tests for the utility functions from :mod:`simcy.util`.
 
 """
 import pytest

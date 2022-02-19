@@ -1,16 +1,16 @@
 """
-This module contains the basic event types used in SimPy.
+This module contains the basic event types used in simcy.
 
 The base class for all events is :class:`Event`. Though it can be directly
 used, there are several specialized subclasses of it.
 
 .. autosummary::
 
-    ~simpy.events.Event
-    ~simpy.events.Timeout
-    ~simpy.events.Process
-    ~simpy.events.AnyOf
-    ~simpy.events.AllOf
+    ~simcy.events.Event
+    ~simcy.events.Timeout
+    ~simcy.events.Process
+    ~simcy.events.AnyOf
+    ~simcy.events.AllOf
 
 """
 from types import FrameType
@@ -28,10 +28,10 @@ from typing import (
     Tuple,
 )
 
-from simpy.exceptions import Interrupt
+from simcy.exceptions import Interrupt
 
 if TYPE_CHECKING and TYPE_CHECKING != 'SPHINX':  # Avoid circular import
-    from simpy.core import Environment, SimTime
+    from simcy.core import Environment, SimTime
 
 PENDING: object = object()
 """Unique object to identify pending values of events."""
@@ -81,18 +81,18 @@ class Event:
 
     def __init__(self, env: 'Environment'):
         self.env = env
-        """The :class:`~simpy.core.Environment` the event lives in."""
+        """The :class:`~simcy.core.Environment` the event lives in."""
         self.callbacks: EventCallbacks = []
         """List of functions that are called when the event is processed."""
 
     def __repr__(self) -> str:
         """Return the description of the event (see :meth:`_desc`) with the id
         of the event."""
-        return f'<{self._desc()} object at {id(self):#x}>'
+        return str(f'<{self._desc()} object at {id(self):#x}>')
 
     def _desc(self) -> str:
         """Return a string *Event()*."""
-        return f'{self.__class__.__name__}()'
+        return str(f'{self.__class__.__name__}()')
 
     @property
     def triggered(self) -> bool:
@@ -123,13 +123,13 @@ class Event:
 
         When an event fails (i.e. with :meth:`fail()`), the failed event's
         `value` is an exception that will be re-raised when the
-        :class:`~simpy.core.Environment` processes the event (i.e. in
-        :meth:`~simpy.core.Environment.step()`).
+        :class:`~simcy.core.Environment` processes the event (i.e. in
+        :meth:`~simcy.core.Environment.step()`).
 
         It is also possible for the failed event's exception to be defused by
         setting :attr:`defused` to ``True`` from an event callback. Doing so
         prevents the event's exception from being re-raised when the event is
-        processed by the :class:`~simpy.core.Environment`.
+        processed by the :class:`~simcy.core.Environment`.
 
         """
         return hasattr(self, '_defused')
@@ -148,7 +148,7 @@ class Event:
 
         """
         if self._value is PENDING:
-            raise AttributeError(f'Value of {self} is not yet available')
+            raise AttributeError(str(f'Value of {self} is not yet available'))
         return self._value
 
     def trigger(self, event: 'Event') -> None:
@@ -171,7 +171,7 @@ class Event:
 
         """
         if self._value is not PENDING:
-            raise RuntimeError(f'{self} has already been triggered')
+            raise RuntimeError(str(f'{self} has already been triggered'))
 
         self._ok = True
         self._value = value
@@ -188,21 +188,21 @@ class Event:
 
         """
         if self._value is not PENDING:
-            raise RuntimeError(f'{self} has already been triggered')
+            raise RuntimeError(str(f'{self} has already been triggered'))
         if not isinstance(exception, BaseException):
-            raise ValueError(f'{exception} is not an exception.')
+            raise ValueError(str(f'{exception} is not an exception.'))
         self._ok = False
         self._value = exception
         self.env.schedule(self)
         return self
 
     def __and__(self, other: 'Event') -> 'Condition':
-        """Return a :class:`~simpy.events.Condition` that will be triggered if
+        """Return a :class:`~simcy.events.Condition` that will be triggered if
         both, this event and *other*, have been processed."""
         return Condition(self.env, Condition.all_events, [self, other])
 
     def __or__(self, other: 'Event') -> 'Condition':
-        """Return a :class:`~simpy.events.Condition` that will be triggered if
+        """Return a :class:`~simcy.events.Condition` that will be triggered if
         either this event or *other* have been processed (or even both, if they
         happened concurrently)."""
         return Condition(self.env, Condition.any_events, [self, other])
@@ -213,7 +213,7 @@ EventCallbacks = List[EventCallback]
 
 
 class Timeout(Event):
-    """A :class:`~simpy.events.Event` that gets triggered after a *delay* has
+    """A :class:`~simcy.events.Event` that gets triggered after a *delay* has
     passed.
 
     This event is automatically triggered when it is created.
@@ -228,7 +228,7 @@ class Timeout(Event):
         value: Optional[Any] = None,
     ):
         if delay < 0:
-            raise ValueError(f'Negative delay {delay}')
+            raise ValueError(str(f'Negative delay {delay}'))
         # NOTE: The following initialization code is inlined from
         # Event.__init__() for performance reasons.
         self.env = env
@@ -240,8 +240,8 @@ class Timeout(Event):
 
     def _desc(self) -> str:
         """Return a string *Timeout(delay[, value=value])*."""
-        value_str = '' if self._value is None else f', value={self.value}'
-        return f'{self.__class__.__name__}({self._delay}{value_str})'
+        value_str = '' if self._value is None else str(f', value={self.value}')
+        return str(f'{self.__class__.__name__}({self._delay}{value_str})')
 
 
 class Initialize(Event):
@@ -266,7 +266,7 @@ class Initialize(Event):
 
 
 class Interruption(Event):
-    """Immediately schedules an :class:`~simpy.exceptions.Interrupt` exception
+    """Immediately schedules an :class:`~simcy.exceptions.Interrupt` exception
     with the given *cause* to be thrown into *process*.
 
     This event is automatically triggered when it is created.
@@ -284,7 +284,7 @@ class Interruption(Event):
 
         if process._value is not PENDING:
             raise RuntimeError(
-                f'{process} has terminated and cannot be interrupted.'
+                str(f'{process} has terminated and cannot be interrupted.')
             )
 
         if process is self.env.active_process:
@@ -335,7 +335,7 @@ class Process(Event):
             # name instead of type and optimistically assume that all objects
             # with a ``throw`` attribute are generators.
             # Remove this workaround if it causes issues in production!
-            raise ValueError(f'{generator} is not a generator.')
+            raise ValueError(str(f'{generator} is not a generator.'))
 
         # NOTE: The following initialization code is inlined from
         # Event.__init__() for performance reasons.
@@ -350,7 +350,7 @@ class Process(Event):
     def _desc(self) -> str:
         """Return a string *Process(process_func_name)*."""
         gen_name: str = self._generator.__name__  # type: ignore
-        return f'{self.__class__.__name__}({gen_name})'
+        return str(f'{self.__class__.__name__}({gen_name})')
 
     @property
     def target(self) -> Event:
@@ -432,9 +432,9 @@ class Process(Event):
                 if hasattr(event, 'callbacks'):
                     raise
 
-                msg = f'Invalid yield value "{event}"'
+                msg = str(f'Invalid yield value "{event}"')
                 descr = _describe_frame(self._generator.gi_frame)
-                error = RuntimeError(f'\n{descr}{msg}')
+                error = RuntimeError(str(f'\n{descr}{msg}'))
                 # Drop the AttributeError as the cause for this exception.
                 error.__cause__ = None
                 raise error
@@ -444,7 +444,7 @@ class Process(Event):
 
 
 class ConditionValue:
-    """Result of a :class:`~simpy.events.Condition`. It supports convenient
+    """Result of a :class:`~simcy.events.Condition`. It supports convenient
     dict-like access to the triggered events and their values. The events are
     ordered by their occurences in the condition."""
 
@@ -469,7 +469,7 @@ class ConditionValue:
             return NotImplemented
 
     def __repr__(self) -> str:
-        return f'<ConditionValue {self.todict()}>'
+        return str(f'<ConditionValue {self.todict()}>')
 
     def __iter__(self) -> Iterator[Event]:
         return self.keys()
@@ -549,8 +549,8 @@ class Condition(Event):
     def _desc(self) -> str:
         """Return a string *Condition(evaluate, [events])*."""
         return (
-            f'{self.__class__.__name__}('
-            f'{self._evaluate.__name__}, {self._events})'
+            str(f'{self.__class__.__name__}('
+            f'{self._evaluate.__name__}, {self._events})')
         )
 
     def _populate_value(self, value: ConditionValue) -> None:
@@ -616,7 +616,7 @@ class Condition(Event):
 
 
 class AllOf(Condition):
-    """A :class:`~simpy.events.Condition` event that is triggered if all of
+    """A :class:`~simcy.events.Condition` event that is triggered if all of
     a list of *events* have been successfully triggered. Fails immediately if
     any of *events* failed.
 
@@ -627,7 +627,7 @@ class AllOf(Condition):
 
 
 class AnyOf(Condition):
-    """A :class:`~simpy.events.Condition` event that is triggered if any of
+    """A :class:`~simcy.events.Condition` event that is triggered if any of
     a list of *events* has been successfully triggered. Fails immediately if
     any of *events* failed.
 
@@ -648,6 +648,6 @@ def _describe_frame(frame: FrameType) -> str:
                 break
 
     return (
-        f'  File "{filename}", line {lineno}, in {name}\n'
-        f'    {line.strip()}\n'
+        str(f'  File "{filename}", line {lineno}, in {name}\n'
+        f'    {line.strip()}\n')
     )

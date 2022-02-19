@@ -1,17 +1,17 @@
 """
-SimPy specific exeptions.
+simcy specific exeptions.
 
 """
 from typing import Any, Optional
 
 
-class SimPyException(Exception):
-    """Base class for all SimPy specific exceptions."""
+class simcyException(Exception):
+    """Base class for all simcy specific exceptions."""
 
 
-class Interrupt(SimPyException):
+class Interrupt(simcyException):
     """Exception thrown into a process if it is interrupted (see
-    :func:`~simpy.events.Process.interrupt()`).
+    :func:`~simcy.events.Process.interrupt()`).
 
     :attr:`cause` provides the reason for the interrupt, if any.
 

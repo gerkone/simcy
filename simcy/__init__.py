@@ -1,5 +1,5 @@
 """
-The ``simpy`` module aggregates SimPy's most used components into a single
+The ``simcy`` module aggregates simcy's most used components into a single
 namespace. This is purely for convenience. You can of course also access
 everything (and more!) via their actual submodules.
 
@@ -12,14 +12,14 @@ from pkg_resources import get_distribution
 from pkgutil import extend_path
 from typing import List, Tuple, Type
 
-from simpy.core import Environment
-from simpy.rt import RealtimeEnvironment
-from simpy.exceptions import SimPyException, Interrupt
-from simpy.events import Event, Timeout, Process, AllOf, AnyOf
-from simpy.resources.resource import (
+from simcy.core import Environment
+from simcy.rt import RealtimeEnvironment
+from simcy.exceptions import simcyException, Interrupt
+from simcy.events import Event, Timeout, Process, AllOf, AnyOf
+from simcy.resources.resource import (
     Resource, PriorityResource, PreemptiveResource)
-from simpy.resources.container import Container
-from simpy.resources.store import (
+from simcy.resources.container import Container
+from simcy.resources.store import (
     Store, PriorityItem, PriorityStore, FilterStore)
 
 __all__ = [
@@ -37,7 +37,7 @@ __all__ = [
     'Process',
     'RealtimeEnvironment',
     'Resource',
-    'SimPyException',
+    'simcyException',
     'Store',
     'Timeout',
 ]
@@ -72,7 +72,7 @@ _toc = (
         PriorityItem, PriorityStore, FilterStore,
     )),
     ('Exceptions', (
-        SimPyException, Interrupt
+        simcyException, Interrupt
     )),
 )
 
@@ -82,4 +82,4 @@ if __doc__:
     assert set(__all__) == {obj.__name__ for _, objs in _toc for obj in objs}
 
 __path__: List[str] = list(extend_path(__path__, __name__))
-__version__: str = get_distribution('simpy').version
+__version__: str = get_distribution('simcy').version

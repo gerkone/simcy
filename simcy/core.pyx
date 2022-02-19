@@ -18,7 +18,7 @@ from typing import (
     Union,
 )
 
-from simpy.events import (
+from simcy.events import (
     AllOf,
     AnyOf,
     Event,
@@ -36,7 +36,7 @@ Infinity: float = float('inf')  #: Convenience alias for infinity
 T = TypeVar('T')
 
 
-class BoundClass(Generic[T]):
+class BoundClass:
     """Allows classes to behave like methods.
 
     The ``__get__()`` descriptor is basically identical to
@@ -88,7 +88,7 @@ class StopSimulation(Exception):
 SimTime = Union[int, float]
 
 
-class Environment:
+cdef class Environment:
     """Execution environment for an event-based simulation. The passing of time
     is simulated by stepping from event to event.
 
@@ -99,6 +99,24 @@ class Environment:
     :attr:`process`, :attr:`timeout` and :attr:`event`.
 
     """
+
+    cdef public object _now
+    cdef public object _eid
+    cdef public object _active_proc
+    cdef public list _queue
+
+    cdef public object process
+    cdef public object timeout
+    cdef public object event
+    cdef public object all_of
+    cdef public object any_of
+
+    def __cinit__(self):
+        self.process = self._process
+        self.timeout = self._timeout
+        self.event = self._event
+        self.all_of = self._all_of
+        self.any_of = self._any_of
 
     def __init__(self, initial_time: SimTime = 0):
         self._now = initial_time
@@ -121,46 +139,33 @@ class Environment:
         """The currently active process of the environment."""
         return self._active_proc
 
-    if TYPE_CHECKING:
-        # This block is only evaluated when type checking with, e.g. Mypy.
-        # These are the effective types of the methods created with BoundClass
-        # magic and are thus a useful reference for SimPy users as well as for
-        # static type checking.
+    def _process(self, generator: ProcessGenerator) -> Process:
+        """Create a new :class:`~simcy.events.Process` instance for
+        *generator*."""
+        return Process(self, generator)
 
-        def process(self, generator: ProcessGenerator) -> Process:
-            """Create a new :class:`~simpy.events.Process` instance for
-            *generator*."""
-            return Process(self, generator)
-
-        def timeout(
+    def _timeout(
             self, delay: SimTime = 0, value: Optional[Any] = None
-        ) -> Timeout:
-            """Return a new :class:`~simpy.events.Timeout` event with a *delay*
-            and, optionally, a *value*."""
-            return Timeout(self, delay, value)
+    ) -> Timeout:
+        """Return a new :class:`~simcy.events.Timeout` event with a *delay*
+        and, optionally, a *value*."""
+        return Timeout(self, delay, value)
 
-        def event(self) -> Event:
-            """Return a new :class:`~simpy.events.Event` instance.
+    def _event(self) -> Event:
+        """Return a new :class:`~simcy.events.Event` instance.
 
-            Yielding this event suspends a process until another process
-            triggers the event.
-            """
-            return Event(self)
+        Yielding this event suspends a process until another process
+        triggers the event.
+        """
+        return Event(self)
 
-        def all_of(self, events: Iterable[Event]) -> AllOf:
-            """Return a :class:`~simpy.events.AllOf` condition for *events*."""
-            return AllOf(self, events)
+    def _all_of(self, events: Iterable[Event]) -> AllOf:
+        """Return a :class:`~simcy.events.AllOf` condition for *events*."""
+        return AllOf(self, events)
 
-        def any_of(self, events: Iterable[Event]) -> AnyOf:
-            """Return a :class:`~simpy.events.AnyOf` condition for *events*."""
-            return AnyOf(self, events)
-
-    else:
-        process = BoundClass(Process)
-        timeout = BoundClass(Timeout)
-        event = BoundClass(Event)
-        all_of = BoundClass(AllOf)
-        any_of = BoundClass(AnyOf)
+    def _any_of(self, events: Iterable[Event]) -> AnyOf:
+        """Return a :class:`~simcy.events.AnyOf` condition for *events*."""
+        return AnyOf(self, events)
 
     def schedule(
         self,
@@ -169,12 +174,15 @@ class Environment:
         delay: SimTime = 0,
     ) -> None:
         """Schedule an *event* with a given *priority* and a *delay*."""
+        self._schedule(event, priority, delay)
+
+    cdef void _schedule(self, object event, object priority, object delay):
         heappush(self._queue,
                  (self._now + delay, priority, next(self._eid), event))
 
     def peek(self) -> SimTime:
         """Get the time of the next scheduled event. Return
-        :data:`~simpy.core.Infinity` if there is no further event."""
+        :data:`~simcy.core.Infinity` if there is no further event."""
         try:
             return self._queue[0][0]
         except IndexError:
@@ -186,6 +194,17 @@ class Environment:
         Raise an :exc:`EmptySchedule` if no further events are available.
 
         """
+        event = self._step()
+
+        if not event._ok and not hasattr(event, '_defused'):
+            # The event has failed and has not been defused. Crash the
+            # environment.
+            # Create a copy of the failure exception with a new traceback.
+            exc = type(event._value)(*event._value.args)
+            exc.__cause__ = event._value
+            raise exc
+
+    cdef object _step(self):
         try:
             self._now, _, _, event = heappop(self._queue)
         except IndexError:
@@ -197,23 +216,15 @@ class Environment:
         for callback in callbacks:
             callback(event)
 
-        if not event._ok and not hasattr(event, '_defused'):
-            # The event has failed and has not been defused. Crash the
-            # environment.
-            # Create a copy of the failure exception with a new traceback.
-            exc = type(event._value)(*event._value.args)
-            exc.__cause__ = event._value
-            raise exc
+        return event
 
-    def run(
-        self, until: Optional[Union[SimTime, Event]] = None
-    ) -> Optional[Any]:
+    def run(self, until: Union[SimTime, Event] = None) -> Any:
         """Executes :meth:`step()` until the given criterion *until* is met.
 
         - If it is ``None`` (which is the default), this method will return
           when there are no further events to be processed.
 
-        - If it is an :class:`~simpy.events.Event`, the method will continue
+        - If it is an :class:`~simcy.events.Event`, the method will continue
           stepping until this event has been triggered and will return its
           value.  Raises a :exc:`RuntimeError` if there are no further events
           to be processed and the *until* event was not triggered.
@@ -222,6 +233,9 @@ class Environment:
           until the environment's time reaches *until*.
 
         """
+        return self._run(until)
+
+    cdef _run(self, object until = None):
         if until is not None:
             if not isinstance(until, Event):
                 # Assume that *until* is a number if it is not None and

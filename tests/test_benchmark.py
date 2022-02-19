@@ -2,7 +2,7 @@
 Performance benchmark tests using the `pytest-benchmark` package.
 
 Benchmarks are divided into three groups: *frequent*, *targeted*, and
-*simulation*. The *frequent* group benchmarks various simpy functions expected
+*simulation*. The *frequent* group benchmarks various simcy functions expected
 to be called frequently in normal simulations. The *targeted* group benchmarks
 singular behaviors run by the environment. The *simulation* group benchmarks
 complete simulations using processes and resources.

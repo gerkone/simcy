@@ -221,7 +221,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = '_static/simpy-logo-small.png'
+latex_logo = '_static/simcy-logo-small.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -248,7 +248,7 @@ latex_logo = '_static/simpy-logo-small.png'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'simpy', 'SimPy Documentation', [', '.join(authors)], 1),
+    ('index', 'simcy', 'SimPy Documentation', [', '.join(authors)], 1),
 ]
 
 
