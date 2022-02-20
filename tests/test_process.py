@@ -5,7 +5,7 @@ Tests for the ``simcy.events.Process``.
 # Pytest gets the parameters "env" and "log" from the *conftest.py* file
 import pytest
 
-from simpy import Interrupt
+from simcy import Interrupt
 
 
 def test_start_non_process(env):

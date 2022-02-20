@@ -17,7 +17,7 @@ setup(
     version="0.0.6",
     author="gerkone",
     author_email="ggalletti@tutanota.com",
-    url="https://github.com/gerkone/cysimcy",
+    url="https://github.com/gerkone/simcy",
     packages=find_packages(exclude=["test*"]),
     ext_modules=cythonize(extensions)
 )

@@ -4,9 +4,9 @@ Tests for the utility functions from :mod:`simcy.util`.
 """
 import pytest
 
-from simpy import Interrupt
-from simpy.events import ConditionValue
-from simpy.util import start_delayed, subscribe_at
+from simcy import Interrupt
+from simcy.events import ConditionValue
+from simcy.util import start_delayed, subscribe_at
 
 
 def test_start_delayed(env):

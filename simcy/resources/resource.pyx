@@ -145,13 +145,7 @@ class PriorityRequest(Request):
         super().__init__(resource)
 
 
-# @dataclass(order=True)
-# class PrioritizedItem:
-#     priority: Any
-#     item: Any = field(compare=False)
-
-
-cdef class SortedQueue():
+cdef class SortedQueue:
     """
     Queue for sorting events by their :attr:`~PriorityRequest.key`
     attribute.
@@ -199,10 +193,7 @@ cdef class SortedQueue():
         else:
             self.h[i] = self.h[-1]
             ret = self.h.pop()
-            if i < len(self.h):
-                heapq._siftup(self.h, i)
-                heapq._siftdown(self.h, 0, i)
-
+            heapq.heapify(self.h)
             return ret[2]
 
     def remove(self, item) -> Any:

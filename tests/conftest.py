@@ -1,5 +1,6 @@
 import pytest
 
+import simcy
 import simpy
 
 
@@ -9,5 +10,9 @@ def log():
 
 
 @pytest.fixture
-def env():
+def env_py():
     return simpy.Environment()
+
+@pytest.fixture
+def env():
+    return simcy.Environment()
