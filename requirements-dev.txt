@@ -10,3 +10,4 @@ twine
 types-setuptools
 wheel
 simpy
+gprof2dot
