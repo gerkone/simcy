@@ -19,6 +19,7 @@ import random
 from time import perf_counter_ns
 
 
+RANDOM_SEED = 42
 PT_MEAN = 10.0         # Avg. processing time in minutes
 PT_SIGMA = 2.0         # Sigma of processing time
 MTTF = 300.0           # Mean time to failure in minutes
@@ -40,7 +41,7 @@ def time_to_failure():
     return random.expovariate(BREAK_MEAN)
 
 
-class Machine(object):
+class Machine:
     """A machine produces parts and my get broken every now and then.
 
     If it breaks, it requests a *repairman* and continues the production
@@ -117,12 +118,13 @@ def other_jobs(env, repairman, des):
 
 
 def run(des):
+    log = ""
+    random.seed(RANDOM_SEED)
     run_time = 0
     # initialize
     env = des.core.Environment()
     repairman = des.resources.resource.PreemptiveResource(env, capacity=1)
-    for i in range(NUM_MACHINES):
-        Machine(env, 'Machine %d' % i, repairman, des)
+    machines = [Machine(env, 'Machine %d' % i, repairman, des) for i in range(NUM_MACHINES)]
     env.process(other_jobs(env, repairman, des))
     # run
     start = perf_counter_ns()
@@ -130,5 +132,8 @@ def run(des):
     end = perf_counter_ns()
     run_time += (end - start)
 
+    log += ('Machine shop results after %s weeks' % WEEKS)
+    for machine in machines:
+        log += ('%s made %d parts.' % (machine.name, machine.parts_made))
 
-    return run_time
+    return run_time, log

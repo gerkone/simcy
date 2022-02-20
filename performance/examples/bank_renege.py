@@ -22,6 +22,9 @@ MIN_PATIENCE = 1  # Min. customer patience
 MAX_PATIENCE = 3  # Max. customer patience
 
 
+log = ""
+
+
 def source(env, number, interval, counter):
     """Source generates customers randomly"""
     for i in range(number):
@@ -32,8 +35,10 @@ def source(env, number, interval, counter):
 
 
 def customer(env, name, counter, time_in_bank):
+    global log
     """Customer arrives, is served and leaves."""
     arrive = env.now
+    log += ('%7.4f %s: Here I am' % (arrive, name))
 
     with counter.request() as req:
         patience = random.uniform(MIN_PATIENCE, MAX_PATIENCE)
@@ -43,11 +48,20 @@ def customer(env, name, counter, time_in_bank):
         wait = env.now - arrive
 
         if req in results:
+            # We got to the counter
+            log += ('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
+
             tib = random.expovariate(1.0 / time_in_bank)
             yield env.timeout(tib)
+            log += ('%7.4f %s: Finished' % (env.now, name))
+
+        else:
+            # We reneged
+            log += ('%7.4f %s: RENEGED after %6.3f' % (env.now, name, wait))
 
 
 def run(des):
+    global log
     run_time = 0
     random.seed(RANDOM_SEED)
     env = des.Environment()
@@ -61,5 +75,5 @@ def run(des):
     end = perf_counter_ns()
     run_time += (end - start)
 
-    return run_time
+    return run_time, log
 

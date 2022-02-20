@@ -35,6 +35,9 @@ RANDOM_SEED = 42
 SIM_TIME = 100
 
 
+log = ""
+
+
 class BroadcastPipe(object):
     """A Broadcast pipe that allows one process to send messages to many.
 
@@ -90,15 +93,29 @@ def message_generator(name, env, out_pipe):
 
 def message_consumer(name, env, in_pipe):
     """A process which consumes messages."""
+    global log
     while True:
         # Get event for message pipe
         msg = yield in_pipe.get()
 
+        if msg[0] < env.now:
+            # if message was already put into pipe, then
+            # message_consumer was late getting to it. Depending on what
+            # is being modeled this, may, or may not have some
+            # significance
+            log += ('LATE Getting Message: at time %d: %s received message: %s' %
+                  (env.now, name, msg[1]))
+
+        else:
+            # message_consumer is synchronized with message_generator
+            log += ('at time %d: %s received message: %s.' %
+                  (env.now, name, msg[1]))
+
         # Process does some other work, which may result in missing messages
         yield env.timeout(random.randint(4, 8))
 
-
 def run(des):
+    global log
     run_time = 0
     random.seed(RANDOM_SEED)
     env = des.Environment()
@@ -108,9 +125,12 @@ def run(des):
     env.process(message_generator('Generator A', env, pipe))
     env.process(message_consumer('Consumer A', env, pipe))
 
+    log += ('\nOne-to-one pipe communication\n')
     start = perf_counter_ns()
     env.run(until=SIM_TIME)
     end = perf_counter_ns()
+
+    run_time += (end - start)
 
     # For one-to many use BroadcastPipe
     # (Note: could also be used for one-to-one,many-to-one or many-to-many)
@@ -121,11 +141,13 @@ def run(des):
     env.process(message_consumer('Consumer A', env, bc_pipe.get_output_conn()))
     env.process(message_consumer('Consumer B', env, bc_pipe.get_output_conn()))
 
+    log += ('\nOne-to-many pipe communication\n')
+
     start = perf_counter_ns()
     env.run(until=SIM_TIME)
     end = perf_counter_ns()
 
     run_time += (end - start)
 
-    return run_time
+    return run_time, log
 

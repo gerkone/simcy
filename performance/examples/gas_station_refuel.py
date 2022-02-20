@@ -33,6 +33,9 @@ T_INTER = [30, 300]        # Create a car every [min, max] seconds
 SIM_TIME = 1000            # Simulation time in seconds
 
 
+log = ""
+
+
 def car(name, env, gas_station, fuel_pump):
     """A car arrives at the gas station for refueling.
 
@@ -41,6 +44,8 @@ def car(name, env, gas_station, fuel_pump):
     depleted, the car has to wait for the tank truck to arrive.
 
     """
+    global log
+    log += ('%s arriving at gas station at %.1f' % (name, env.now))
     fuel_tank_level = random.randint(*FUEL_TANK_LEVEL)
     with gas_station.request() as req:
         start = env.now
@@ -54,12 +59,16 @@ def car(name, env, gas_station, fuel_pump):
         # The "actual" refueling process takes some time
         yield env.timeout(liters_required / REFUELING_SPEED)
 
+        log += ('%s finished refueling in %.1f seconds.' % (name, env.now - start))
+
 
 def gas_station_control(env, fuel_pump):
     """Periodically check the level of the *fuel_pump* and call the tank
     truck if the level falls below a threshold."""
+    global log
     while True:
         if fuel_pump.level / fuel_pump.capacity * 100 < THRESHOLD:
+            log += ('Calling tank truck at %d' % env.now)
             # Wait for the tank truck to arrive and refuel the station
             yield env.process(tank_truck(env, fuel_pump))
 
@@ -68,8 +77,11 @@ def gas_station_control(env, fuel_pump):
 
 def tank_truck(env, fuel_pump):
     """Arrives at the gas station after a certain delay and refuels it."""
+    global log
     yield env.timeout(TANK_TRUCK_TIME)
+    log += ('Tank truck arriving at time %d' % env.now)
     ammount = fuel_pump.capacity - fuel_pump.level
+    log += ('Tank truck refuelling %.1f liters.' % ammount)
     yield fuel_pump.put(ammount)
 
 
@@ -81,6 +93,8 @@ def car_generator(env, gas_station, fuel_pump):
 
 
 def run(des):
+    global log
+    log = ""
     run_time = 0
     random.seed(RANDOM_SEED)
 
@@ -97,4 +111,4 @@ def run(des):
     end = perf_counter_ns()
     run_time += (end - start)
 
-    return run_time
+    return run_time, log

@@ -78,6 +78,7 @@ Theater = collections.namedtuple('Theater', 'counter, movies, available, '
 
 
 def run(des):
+    log = ""
     run_time = 0
 
     random.seed(RANDOM_SEED)
@@ -100,4 +101,12 @@ def run(des):
     end = perf_counter_ns()
     run_time += (end - start)
 
-    return run_time
+    # Analysis/results
+    for movie in movies:
+        if theater.sold_out[movie]:
+            log += ('Movie "%s" sold out %.1f minutes after ticket counter '
+                  'opening.' % (movie, theater.when_sold_out[movie]))
+            log += ('  Number of people leaving queue when film sold out: %s' %
+                  theater.num_renegers[movie])
+
+    return run_time, log

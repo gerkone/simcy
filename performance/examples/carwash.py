@@ -26,7 +26,10 @@ T_INTER = 7       # Create a car every ~7 minutes
 SIM_TIME = 20     # Simulation time in minutes
 
 
-class Carwash(object):
+log = ""
+
+
+class Carwash:
     """A carwash has a limited number of machines (``NUM_MACHINES``) to
     clean cars in parallel.
 
@@ -43,7 +46,10 @@ class Carwash(object):
     def wash(self, car):
         """The washing processes. It takes a ``car`` processes and tries
         to clean it."""
+        global log
         yield self.env.timeout(WASHTIME)
+        log += ("Carwash removed %d%% of %s's dirt." %
+              (random.randint(50, 99), car))
 
 
 def car(env, name, cw):
@@ -54,9 +60,15 @@ def car(env, name, cw):
     leaves to never come back ...
 
     """
+    global log
+    log += ('%s arrives at the carwash at %.2f.' % (name, env.now))
     with cw.machine.request() as request:
         yield request
+
+        log += ('%s enters the carwash at %.2f.' % (name, env.now))
         yield env.process(cw.wash(name))
+
+        log += ('%s leaves the carwash at %.2f.' % (name, env.now))
 
 
 def setup(env, num_machines, washtime, t_inter, des):
@@ -78,6 +90,7 @@ def setup(env, num_machines, washtime, t_inter, des):
 
 
 def run(des):
+    global log
     run_time = 0
     random.seed(RANDOM_SEED)  # This helps reproducing the results
 
@@ -90,4 +103,4 @@ def run(des):
     end = perf_counter_ns()
     run_time += (end - start)
 
-    return run_time
+    return run_time, log

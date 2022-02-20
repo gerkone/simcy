@@ -111,13 +111,6 @@ cdef class Environment:
     cdef public object all_of
     cdef public object any_of
 
-    def __cinit__(self):
-        self.process = self._process
-        self.timeout = self._timeout
-        self.event = self._event
-        self.all_of = self._all_of
-        self.any_of = self._any_of
-
     def __init__(self, initial_time: SimTime = 0):
         self._now = initial_time
         self._queue: List[
@@ -139,19 +132,19 @@ cdef class Environment:
         """The currently active process of the environment."""
         return self._active_proc
 
-    def _process(self, generator: ProcessGenerator) -> Process:
+    def process(self, generator: ProcessGenerator) -> Process:
         """Create a new :class:`~simcy.events.Process` instance for
         *generator*."""
         return Process(self, generator)
 
-    def _timeout(
+    def timeout(
             self, delay: SimTime = 0, value: Optional[Any] = None
     ) -> Timeout:
         """Return a new :class:`~simcy.events.Timeout` event with a *delay*
         and, optionally, a *value*."""
         return Timeout(self, delay, value)
 
-    def _event(self) -> Event:
+    def event(self) -> Event:
         """Return a new :class:`~simcy.events.Event` instance.
 
         Yielding this event suspends a process until another process
@@ -159,11 +152,11 @@ cdef class Environment:
         """
         return Event(self)
 
-    def _all_of(self, events: Iterable[Event]) -> AllOf:
+    def all_of(self, events: Iterable[Event]) -> AllOf:
         """Return a :class:`~simcy.events.AllOf` condition for *events*."""
         return AllOf(self, events)
 
-    def _any_of(self, events: Iterable[Event]) -> AnyOf:
+    def any_of(self, events: Iterable[Event]) -> AnyOf:
         """Return a :class:`~simcy.events.AnyOf` condition for *events*."""
         return AnyOf(self, events)
 

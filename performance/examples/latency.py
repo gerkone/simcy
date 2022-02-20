@@ -25,6 +25,9 @@ from time import perf_counter_ns
 SIM_DURATION = 100
 
 
+log = ""
+
+
 class Cable(object):
     """This class represents the propagation through a cable."""
     def __init__(self, env, delay, des):
@@ -53,12 +56,15 @@ def sender(env, cable):
 
 def receiver(env, cable):
     """A process which consumes messages."""
+    global log
     while True:
         # Get event for message pipe
         msg = yield cable.get()
+        log += ('Received this at %d while %s' % (env.now, msg))
 
 
 def run(des):
+    global log
     run_time = 0
     env = des.Environment()
 
@@ -71,4 +77,4 @@ def run(des):
     end = perf_counter_ns()
     run_time += (end - start)
 
-    return run_time
+    return run_time, log
