@@ -20,7 +20,7 @@ Example by:
   Keith Smith
 
 """
-import simpy
+import simcy
 
 
 SIM_DURATION = 100
@@ -31,7 +31,7 @@ class Cable(object):
     def __init__(self, env, delay):
         self.env = env
         self.delay = delay
-        self.store = simpy.Store(env)
+        self.store = simcy.Store(env)
 
     def latency(self, value):
         yield self.env.timeout(self.delay)
@@ -62,7 +62,7 @@ def receiver(env, cable):
 
 # Setup and start the simulation
 print('Event Latency')
-env = simpy.Environment()
+env = simcy.Environment()
 
 cable = Cable(env, 10)
 env.process(sender(env, cable))

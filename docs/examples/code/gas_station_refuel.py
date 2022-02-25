@@ -20,7 +20,7 @@ Scenario:
 import itertools
 import random
 
-import simpy
+import simcy
 
 
 RANDOM_SEED = 42
@@ -94,9 +94,9 @@ print('Gas Station refuelling')
 random.seed(RANDOM_SEED)
 
 # Create environment and start processes
-env = simpy.Environment()
-gas_station = simpy.Resource(env, 2)
-fuel_pump = simpy.Container(env, GAS_STATION_SIZE, init=GAS_STATION_SIZE)
+env = simcy.Environment()
+gas_station = simcy.Resource(env, 2)
+fuel_pump = simcy.Container(env, GAS_STATION_SIZE, init=GAS_STATION_SIZE)
 env.process(gas_station_control(env, fuel_pump))
 env.process(car_generator(env, gas_station, fuel_pump))
 

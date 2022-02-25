@@ -29,7 +29,7 @@ Example By:
 """
 import random
 
-import simpy
+import simcy
 
 
 RANDOM_SEED = 42
@@ -48,7 +48,7 @@ class BroadcastPipe(object):
     :meth:`get_output_conn()` is called.
 
     """
-    def __init__(self, env, capacity=simpy.core.Infinity):
+    def __init__(self, env, capacity=simcy.core.Infinity):
         self.env = env
         self.capacity = capacity
         self.pipes = []
@@ -66,7 +66,7 @@ class BroadcastPipe(object):
         The return value is a :class:`~simcy.resources.store.Store`.
 
         """
-        pipe = simpy.Store(self.env, capacity=self.capacity)
+        pipe = simcy.Store(self.env, capacity=self.capacity)
         self.pipes.append(pipe)
         return pipe
 
@@ -114,10 +114,10 @@ def message_consumer(name, env, in_pipe):
 # Setup and start the simulation
 print('Process communication')
 random.seed(RANDOM_SEED)
-env = simpy.Environment()
+env = simcy.Environment()
 
 # For one-to-one or many-to-one type pipes, use Store
-pipe = simpy.Store(env)
+pipe = simcy.Store(env)
 env.process(message_generator('Generator A', env, pipe))
 env.process(message_consumer('Consumer A', env, pipe))
 
@@ -126,7 +126,7 @@ env.run(until=SIM_TIME)
 
 # For one-to many use BroadcastPipe
 # (Note: could also be used for one-to-one,many-to-one or many-to-many)
-env = simpy.Environment()
+env = simcy.Environment()
 bc_pipe = BroadcastPipe(env)
 
 env.process(message_generator('Generator A', env, bc_pipe))

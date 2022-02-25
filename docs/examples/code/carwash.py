@@ -17,7 +17,7 @@ Scenario:
 """
 import random
 
-import simpy
+import simcy
 
 
 RANDOM_SEED = 42
@@ -38,7 +38,7 @@ class Carwash(object):
     """
     def __init__(self, env, num_machines, washtime):
         self.env = env
-        self.machine = simpy.Resource(env, num_machines)
+        self.machine = simcy.Resource(env, num_machines)
         self.washtime = washtime
 
     def wash(self, car):
@@ -90,7 +90,7 @@ print('Check out http://youtu.be/fXXmeP9TvBg while simulating ... ;-)')
 random.seed(RANDOM_SEED)  # This helps reproducing the results
 
 # Create an environment and start the setup process
-env = simpy.Environment()
+env = simcy.Environment()
 env.process(setup(env, NUM_MACHINES, WASHTIME, T_INTER))
 
 # Execute!

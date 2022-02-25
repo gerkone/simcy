@@ -13,7 +13,7 @@ Scenario:
 """
 import random
 
-import simpy
+import simcy
 
 
 RANDOM_SEED = 42
@@ -60,9 +60,9 @@ def customer(env, name, counter, time_in_bank):
 # Setup and start the simulation
 print('Bank renege')
 random.seed(RANDOM_SEED)
-env = simpy.Environment()
+env = simcy.Environment()
 
 # Start processes and run
-counter = simpy.Resource(env, capacity=1)
+counter = simcy.Resource(env, capacity=1)
 env.process(source(env, NEW_CUSTOMERS, INTERVAL_CUSTOMERS, counter))
 env.run()

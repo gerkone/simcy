@@ -16,7 +16,7 @@ Scenario:
 import collections
 import random
 
-import simpy
+import simcy
 
 
 RANDOM_SEED = 42
@@ -81,10 +81,10 @@ Theater = collections.namedtuple('Theater', 'counter, movies, available, '
 # Setup and start the simulation
 print('Movie renege')
 random.seed(RANDOM_SEED)
-env = simpy.Environment()
+env = simcy.Environment()
 
 # Create movie theater
-counter = simpy.Resource(env, capacity=1)
+counter = simcy.Resource(env, capacity=1)
 movies = ['Python Unchained', 'Kill Process', 'Pulp Implementation']
 available = {movie: TICKETS for movie in movies}
 sold_out = {movie: env.event() for movie in movies}

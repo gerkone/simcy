@@ -118,10 +118,9 @@ def test_exception_chaining(env):
         Traceback (most recent call last):
           File "{path}tests/test_exceptions.py", line {line}, in test_exception_chaining
             env.run()
-          File "{path}simcy/core.pyx", line {line}, in run
-            self.step()
-          File "{path}simcy/core.pyx", line {line}, in step
-            raise exc
+          File "{path}/core.pyx", line {line}, in simcy.core.Environment.run
+          File "{path}/core.pyx", line {line}, in simcy.core.Environment._run
+          File "{path}/core.pyx", line {line}, in simcy.core.Environment.step
         RuntimeError: foo
         """)).replace(r'\{line\}', r'\d+').replace(r'\{path\}', r'.*')  # NOQA
 

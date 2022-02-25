@@ -17,7 +17,7 @@ Scenario:
 """
 import random
 
-import simpy
+import simcy
 
 
 RANDOM_SEED = 42
@@ -78,7 +78,7 @@ class Machine(object):
                     yield self.env.timeout(done_in)
                     done_in = 0  # Set to 0 to exit while loop.
 
-                except simpy.Interrupt:
+                except simcy.Interrupt:
                     self.broken = True
                     done_in -= self.env.now - start  # How much time left?
 
@@ -115,7 +115,7 @@ def other_jobs(env, repairman):
                     start = env.now
                     yield env.timeout(done_in)
                     done_in = 0
-                except simpy.Interrupt:
+                except simcy.Interrupt:
                     done_in -= env.now - start
 
 
@@ -124,8 +124,8 @@ print('Machine shop')
 random.seed(RANDOM_SEED)  # This helps reproducing the results
 
 # Create an environment and start the setup process
-env = simpy.Environment()
-repairman = simpy.PreemptiveResource(env, capacity=1)
+env = simcy.Environment()
+repairman = simcy.PreemptiveResource(env, capacity=1)
 machines = [Machine(env, 'Machine %d' % i, repairman)
             for i in range(NUM_MACHINES)]
 env.process(other_jobs(env, repairman))
